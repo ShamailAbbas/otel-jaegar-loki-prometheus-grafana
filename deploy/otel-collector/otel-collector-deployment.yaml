@@ -14,12 +14,19 @@ spec:
         app: otel-collector
     spec:
       containers:
-      - name: otel-collector
-        image: otel/opentelemetry-collector-contrib:latest
-        command: ["otelcontribcol", "--config=/conf/otel-collector-config.yaml"]
-        volumeMounts:
-          - name: config
-            mountPath: /conf
+        - name: otel-collector
+          image: otel/opentelemetry-collector-contrib:latest
+          args: ["--config=/conf/otel-collector-config.yaml"]
+          ports:
+            - name: otlp-grpc
+              containerPort: 4317
+            - name: otlp-http
+              containerPort: 4318
+            - name: prom-metrics
+              containerPort: 8888
+          volumeMounts:
+            - name: config
+              mountPath: /conf
       volumes:
         - name: config
           configMap:

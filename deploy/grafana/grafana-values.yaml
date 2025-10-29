@@ -2,6 +2,10 @@ adminUser: admin
 adminPassword: admin123
 service:
   type: ClusterIP
+
+tracing:
+  enabled: false  # Prevent Grafana startup error
+
 datasources:
   datasources.yaml:
     apiVersion: 1
