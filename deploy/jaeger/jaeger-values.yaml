@@ -1,0 +1,7 @@
+collector:
+  replicas: 2
+  service:
+    type: ClusterIP
+query:
+  service:
+    type: ClusterIP
