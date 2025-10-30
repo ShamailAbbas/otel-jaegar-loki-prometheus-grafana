@@ -18,8 +18,8 @@ data:
           insecure: true
       prometheus:
         endpoint: "0.0.0.0:8888"
-      loki:
-        endpoint: "http://loki.observability.svc.cluster.local:3100/loki/api/v1/push"
+      # loki:
+      #   endpoint: "http://loki.observability.svc.cluster.local:3100/loki/api/v1/push"
 
     service:
       pipelines:
@@ -29,6 +29,6 @@ data:
         metrics:
           receivers: [otlp]
           exporters: [prometheus]
-        logs:
-          receivers: [otlp]
-          exporters: [loki]
+        # logs:
+        #   receivers: [otlp]
+        #   exporters: [loki]
