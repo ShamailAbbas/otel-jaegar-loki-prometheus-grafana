@@ -19,5 +19,34 @@ spec:
         ports:
           - containerPort: 3000
         env:
-          - name: OTEL_EXPORTER_OTLP_ENDPOINT
-            value: "http://otel-collector.observability.svc.cluster.local:4317"
+          - name: OTEL_COLLECTOR_URL
+            value: "grpc://otel-collector.observability.svc.cluster.local:4317"
+          - name: METRICS_INTERVAL_MS
+            value: "10000"
+          - name: SERVICE_NAME
+            value: "nodejs-otel-app"
+          - name: SERVICE_VERSION
+            value: "1.0.0"
+          - name: PORT
+            value: "3000"
+          - name: NODE_ENV
+            value: "production"
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 10
+          periodSeconds: 15
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 10

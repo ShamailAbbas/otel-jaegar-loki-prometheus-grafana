@@ -9,15 +9,17 @@ data:
       otlp:
         protocols:
           grpc:
+            endpoint: 0.0.0.0:4317
           http:
+            endpoint: 0.0.0.0:4318
 
     exporters:
-      jaeger:
+      otlp/jaeger:
         endpoint: "jaeger-collector.observability.svc.cluster.local:14250"
         tls:
           insecure: true
       prometheus:
-        endpoint: "0.0.0.0:8888"
+        endpoint: "0.0.0.0:8889"
       # loki:
       #   endpoint: "http://loki.observability.svc.cluster.local:3100/loki/api/v1/push"
 
@@ -25,7 +27,7 @@ data:
       pipelines:
         traces:
           receivers: [otlp]
-          exporters: [jaeger]
+          exporters: [otlp/jaeger]
         metrics:
           receivers: [otlp]
           exporters: [prometheus]
