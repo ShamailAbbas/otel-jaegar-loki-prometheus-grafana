@@ -1,0 +1,49 @@
+prometheusOperator:
+  enabled: true
+
+prometheus:
+  prometheusSpec:
+    retention: 30d
+    serviceMonitorSelector:
+      matchLabels:
+        release: kube-prometheus-stack  # Match your ServiceMonitor label
+    serviceMonitorNamespaceSelector: {}  # Allow all namespaces
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: gp3
+          resources:
+            requests:
+              storage: 5Gi
+  ingress:
+    enabled: false
+
+alertmanager:
+  enabled: true
+  alertmanagerSpec:
+    alertmanagerConfiguration:
+        name: alert-config  # Matches your AlertmanagerConfig metadata.name
+    alertmanagerConfigSelector: null
+    alertmanagerConfigNamespaceSelector: null
+    storage:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: gp3
+          resources:
+            requests:
+              storage: 2Gi
+
+grafana:
+  enabled: true
+  adminUser: admin
+  adminPassword: admin
+  service:
+    name: prometheus-grafana
+    type: ClusterIP
+    port: 80
+  persistence:
+    enabled: true
+    storageClassName: gp3
+    size: 5Gi
+  ingress:
+    enabled: false
