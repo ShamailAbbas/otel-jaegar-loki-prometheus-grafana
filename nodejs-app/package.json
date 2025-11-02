@@ -6,19 +6,20 @@
     "start": "node server.js",
     "dev": "NODE_ENV=development nodemon server.js"
   },
-   "type": "commonjs",
+  "type": "commonjs",
   "dependencies": {
     "@opentelemetry/api": "1.8.0",
     "@opentelemetry/api-logs": "0.51.1",
     "@opentelemetry/auto-instrumentations-node": "0.46.1",
+    "@opentelemetry/exporter-logs-otlp-grpc": "0.51.1",
     "@opentelemetry/exporter-metrics-otlp-grpc": "0.51.1",
     "@opentelemetry/exporter-trace-otlp-grpc": "0.51.1",
-    "@opentelemetry/exporter-logs-otlp-grpc": "0.51.1",
     "@opentelemetry/resources": "1.24.1",
     "@opentelemetry/sdk-logs": "0.51.1",
     "@opentelemetry/sdk-metrics": "1.24.1",
     "@opentelemetry/sdk-node": "0.51.1",
     "@opentelemetry/semantic-conventions": "1.24.1",
+    "axios": "^1.13.1",
     "dotenv": "16.4.5",
     "express": "4.19.2",
     "morgan": "1.10.0"

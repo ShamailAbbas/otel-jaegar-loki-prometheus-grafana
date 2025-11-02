@@ -1,14 +1,13 @@
-const { metrics} = require("@opentelemetry/api");
+const { metrics } = require("@opentelemetry/api");
 const { NodeSDK } = require("@opentelemetry/sdk-node");
 const { getNodeAutoInstrumentations } = require("@opentelemetry/auto-instrumentations-node");
 const { OTLPTraceExporter } = require("@opentelemetry/exporter-trace-otlp-grpc");
 const { OTLPMetricExporter } = require("@opentelemetry/exporter-metrics-otlp-grpc");
-const { PeriodicExportingMetricReader, Histogram } = require("@opentelemetry/sdk-metrics");
+const { PeriodicExportingMetricReader } = require("@opentelemetry/sdk-metrics");
 const { LoggerProvider, BatchLogRecordProcessor } = require("@opentelemetry/sdk-logs");
 const { OTLPLogExporter } = require("@opentelemetry/exporter-logs-otlp-grpc");
 const { Resource } = require("@opentelemetry/resources");
 const { SEMRESATTRS_SERVICE_NAME, SEMRESATTRS_SERVICE_VERSION } = require("@opentelemetry/semantic-conventions");
-
 const { logs } = require("@opentelemetry/api-logs");
 
 let sdk;
@@ -30,13 +29,18 @@ function initializeOpenTelemetry() {
 
   // Metrics
   const metricExporter = new OTLPMetricExporter({ url: collectorUrl });
-  const metricReader = new PeriodicExportingMetricReader({ exporter: metricExporter, exportIntervalMillis: 5000 });
+  const metricReader = new PeriodicExportingMetricReader({
+    exporter: metricExporter,
+    exportIntervalMillis: 5000
+  });
 
   // Logs
   const logExporter = new OTLPLogExporter({ url: collectorUrl });
   const loggerProvider = new LoggerProvider({ resource });
   loggerProvider.addLogRecordProcessor(new BatchLogRecordProcessor(logExporter));
   logs.setGlobalLoggerProvider(loggerProvider);
+
+  // Initialize logger after provider is set
   logger = logs.getLogger(serviceName);
 
   // Initialize SDK
@@ -50,7 +54,7 @@ function initializeOpenTelemetry() {
   sdk.start();
   console.log("✅ OpenTelemetry initialized (traces + metrics + logs)");
 
-  // ---- Metrics ----
+  // ---- Initialize Metrics AFTER SDK starts ----
   const meter = metrics.getMeter(serviceName);
 
   // Total HTTP requests
@@ -72,15 +76,34 @@ function initializeOpenTelemetry() {
 }
 
 function recordHttpRequest({ method, route, status, duration }) {
-  httpCounter.add(1, { method, route, status: status.toString() });
-  httpDurationHistogram.record(duration, { method, route, status: status.toString() });
+  // Safety check: ensure metrics are initialized
+  if (!httpCounter || !httpDurationHistogram || !errorCounter) {
+    console.warn("Metrics not initialized yet, skipping recording");
+    return;
+  }
 
-  if (status >= 400) {
-    errorCounter.add(1, { method, route, status: status.toString() });
+  const attributes = {
+    method: method.toUpperCase(),
+    route,
+    status: status.toString()
+  };
+
+  try {
+    httpCounter.add(1, attributes);
+    httpDurationHistogram.record(duration, attributes);
+
+    if (status >= 400) {
+      errorCounter.add(1, attributes);
+    }
+  } catch (err) {
+    console.error("Error recording metrics:", err.message);
   }
 }
 
 function getLogger() {
+  if (!logger) {
+    throw new Error("Logger not initialized. Call initializeOpenTelemetry() first.");
+  }
   return logger;
 }
 

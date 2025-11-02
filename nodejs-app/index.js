@@ -6,8 +6,10 @@ const routes = require("./routes");
 const { errorHandler, notFoundHandler } = require("./middleware/errorHandler");
 const { simulateTraffic } = require("./simulateTraffic");
 
-// Initialize OpenTelemetry
+// Initialize OpenTelemetry FIRST
 const sdk = initializeOpenTelemetry();
+
+// Get logger AFTER initialization
 const logger = getLogger();
 
 // Graceful shutdown
@@ -24,18 +26,6 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
-
-// Metrics + Logging middleware
-app.use((req, res, next) => {
-  const start = Date.now();
-
-  res.on("finish", () => {
-    const duration = Date.now() - start;
-    // Already recorded in telemetry.js via simulateTraffic
-  });
-
-  next();
-});
 
 // Routes
 app.use("/", routes);
@@ -56,8 +46,11 @@ const server = app.listen(PORT, () => {
     attributes: { env: process.env.NODE_ENV || "development" },
   });
 
-  // Start continuous traffic simulation
-  startContinuousTraffic();
+  // Start continuous traffic simulation after server is ready
+  // Add small delay to ensure server is fully initialized
+  setTimeout(() => {
+    startContinuousTraffic();
+  }, 2000);
 });
 
 // Continuous traffic function
@@ -78,24 +71,36 @@ function startContinuousTraffic() {
     { method: "delete", path: "/users/999" }, // simulate 404
   ];
 
+  let isShuttingDown = false;
+
   async function randomRequest() {
+    if (isShuttingDown) return;
+
     const ep = endpoints[Math.floor(Math.random() * endpoints.length)];
     const delay = Math.floor(Math.random() * (maxDelay - minDelay + 1)) + minDelay;
 
     try {
-      await simulateTraffic(1, 0, [ep]); // Call simulateTraffic for a single endpoint
+      // Pass single endpoint as array
+      await simulateTraffic(1, 0, [ep]);
     } catch (err) {
       console.error("Error in simulated request:", err.message);
     } finally {
       // Schedule the next random request
-      setTimeout(randomRequest, delay);
+      if (!isShuttingDown) {
+        setTimeout(randomRequest, delay);
+      }
     }
   }
 
   // Start multiple concurrent random requests
   for (let i = 0; i < maxConcurrent; i++) {
-    randomRequest();
+    setTimeout(() => randomRequest(), i * 200); // Stagger initial requests
   }
+
+  // Stop simulation on shutdown
+  process.on("SIGTERM", () => {
+    isShuttingDown = true;
+  });
 }
 
 // Handle unhandled rejections
