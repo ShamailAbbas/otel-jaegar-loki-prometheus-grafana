@@ -42,3 +42,9 @@ echo "==== Deploying applications ===="
 kubectl apply -f deploy/apps/
 
 
+
+# echo "==== Deployment complete! Starting port-forwards... ===="
+# kubectl port-forward svc/prometheus-grafana 7070:80 -n observability &
+# kubectl port-forward svc/jaeger-query 8080:80 -n observability &
+# kubectl port-forward svc/prometheus-kube-prometheus-prometheus 9090:9090 -n observability &
+# echo "====  Access Grafana at http://localhost:7070, Jaeger at http://localhost:8080, Prometheus at http://localhost:9090 ===="
