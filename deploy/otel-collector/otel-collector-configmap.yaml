@@ -15,11 +15,23 @@ data:
 
     exporters:
       otlp/jaeger:
-        endpoint: "jaeger-collector.observability.svc.cluster.local:14250"
+        endpoint: "jaeger-collector.observability.svc.cluster.local:4317"
+        # tls:
+        #   cert_file: cert.pem
+        #   key_file: cert-key.pem
         tls:
           insecure: true
       prometheus:
         endpoint: "0.0.0.0:8889"
+
+      prometheusremotewrite:
+        endpoint: "http://prometheus-operated.observability.svc.cluster.local:9090/api/v1/write"
+
+      otlphttp:
+        endpoint: http://loki-gateway.observability.svc.cluster.local:80/otlp
+        # endpoint: http://loki-gateway.monitoring.svc.cluster.local:80/otlp
+        headers:
+          "X-Scope-OrgID": "my-org"
       # loki:
       #   endpoint: "http://loki.observability.svc.cluster.local:3100/loki/api/v1/push"
 
@@ -30,7 +42,7 @@ data:
           exporters: [otlp/jaeger]
         metrics:
           receivers: [otlp]
-          exporters: [prometheus]
-        # logs:
-        #   receivers: [otlp]
-        #   exporters: [loki]
+          exporters: [prometheusremotewrite]
+        logs:
+          receivers: [otlp]
+          exporters: [otlphttp]

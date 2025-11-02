@@ -1,0 +1,101 @@
+# adminPassword: admin
+
+# persistence:
+#   enabled: true
+#   storageClassName: "gp3"
+#   size: 10Gi
+
+# env:
+#   JAEGER_AGENT_PORT: ""
+
+# datasources:
+#   datasources.yaml:
+#     apiVersion: 1
+#     datasources:
+#     - name: Loki
+#       type: loki
+#       access: proxy
+#       url: http://loki-gateway
+#       isDefault: false
+#       editable: true
+#     - name: Jaeger
+#       type: jaeger
+#       access: proxy
+#       url: http://jaeger-query:16686
+#       isDefault: false
+#       editable: true
+
+# service:
+#   type: ClusterIP
+#   port: 80
+
+# resources:
+#   limits:
+#     cpu: 500m
+#     memory: 512Mi
+#   requests:
+#     cpu: 100m
+#     memory: 128Mi
+
+
+
+
+
+
+
+
+
+
+
+adminPassword: admin
+
+persistence:
+  enabled: true
+  storageClassName: "gp3"
+  size: 10Gi
+
+env:
+  # If you are using Jaeger agent inside Grafana pod, otherwise leave empty
+  JAEGER_AGENT_PORT: ""
+
+datasources:
+  datasources.yaml:
+    apiVersion: 1
+    datasources:
+    - name: Loki
+      type: loki
+      access: proxy
+      url: http://loki-gateway.observability.svc.cluster.local:80  # Updated to your Loki service
+      isDefault: false
+      editable: true
+    - name: Jaeger
+      type: jaeger
+      access: proxy
+      url: http://jaeger-collector.observability.svc.cluster.local:16686  # Updated to your Jaeger query service
+      isDefault: false
+      editable: true
+
+service:
+  type: ClusterIP
+  port: 80
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+# Optional: Increase logging and dashboard refresh
+logging:
+  mode: "console"
+  level: "info"
+
+# Optional: dashboards from ConfigMaps or sidecar if you plan to add them later
+sidecar:
+  dashboards:
+    enabled: true
+    label: grafana_dashboard
+  datasources:
+    enabled: true

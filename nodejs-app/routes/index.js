@@ -7,6 +7,11 @@ let users = [
   { id: 2, name: "Bob", email: "bob@example.com" },
 ];
 
+let profiles = [
+  { id: 1, name: "Alice Profile", email: "alice@example.com" },
+  { id: 2, name: "Bob Profile", email: "bob@example.com" },
+];
+
 // Root endpoint
 router.get("/", (req, res) => {
   res.json({
@@ -34,6 +39,13 @@ router.get("/users", (req, res) => {
     success: true,
     count: users.length,
     data: users,
+  });
+});
+router.get("/profiles", (req, res) => {
+  res.json({
+    success: true,
+    count: profiles.length,
+    data: profiles,
   });
 });
 

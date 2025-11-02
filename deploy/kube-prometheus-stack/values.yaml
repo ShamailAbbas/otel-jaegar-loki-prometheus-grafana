@@ -3,6 +3,8 @@ prometheusOperator:
 
 prometheus:
   prometheusSpec:
+    enableRemoteWriteReceiver: true
+
     retention: 30d
     serviceMonitorSelector:
       matchLabels:
@@ -47,3 +49,18 @@ grafana:
     size: 5Gi
   ingress:
     enabled: false
+
+  additionalDataSources:
+    - name: Loki
+      type: loki
+      url: http://loki-gateway.observability.svc.cluster.local:80
+      access: proxy
+      jsonData:
+        httpHeaderName1: "X-Scope-OrgID"
+      secureJsonData:
+        httpHeaderValue1: "fake"
+
+  env:
+    # If you are using Jaeger agent inside Grafana pod, otherwise leave empty
+    JAEGER_AGENT_PORT: ""
+

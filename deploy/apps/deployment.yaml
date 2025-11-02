@@ -4,7 +4,7 @@ metadata:
   name: nodejs-app
   namespace: observability
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: nodejs-app
@@ -20,11 +20,12 @@ spec:
           - containerPort: 3000
         env:
           - name: OTEL_COLLECTOR_URL
-            value: "grpc://otel-collector.observability.svc.cluster.local:4317"
+            # value: "http://otel-collector.observability:4317"
+            value: "http://otel-collector.observability.svc.cluster.local:4317"
           - name: METRICS_INTERVAL_MS
             value: "10000"
           - name: SERVICE_NAME
-            value: "nodejs-otel-app"
+            value: "nodejs-otel-app-2"
           - name: SERVICE_VERSION
             value: "1.0.0"
           - name: PORT

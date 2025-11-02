@@ -1,5 +1,78 @@
-grafana:
-  enabled: false
-promtail:
+deploymentMode: SingleBinary
+
+loki:
+  auth_enabled: false
+  commonConfig:
+    replication_factor: 1
+  storage:
+    type: filesystem  # This is correct - it means use local filesystem (on the PV)
+    filesystem:
+      chunks_directory: /var/loki/chunks
+      # rules_directory: /var/loki/rules
+
+    # Add this for the chart to be happy
+    bucketNames:
+      chunks: "chunks"
+      index: "index"
+  schemaConfig:
+    configs:
+      - from: 2024-01-01
+        store: tsdb
+        object_store: filesystem  # This refers to the filesystem on the PVC
+        schema: v13
+        index:
+          prefix: index_
+          period: 24h
+  limits_config:
+    allow_structured_metadata: true
+
+
+singleBinary:
+  replicas: 1
+  persistence:
+    # -- Enable StatefulSetAutoDeletePVC feature
+    enableStatefulSetAutoDeletePVC: true
+    # -- Enable persistent disk
+    enabled: true
+    # -- Size of persistent disk
+    size: 10Gi
+    storageClass: gp3
+    # storageClassName: gp3  # or whatever exists in your cluster
+  resources:
+    limits:
+      cpu: 1
+      memory: 1Gi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+  # This is where the PVC gets mounted
+  # extraVolumeMounts:
+  #   - name: storage
+  #     mountPath: /var/loki
+
+# Enable gateway for OTLP endpoint
+gateway:
   enabled: true
-  replicas: 2
+  service:
+    port: 80
+
+# Monitoring
+monitoring:
+  selfMonitoring:
+    enabled: false
+    grafanaAgent:
+      installOperator: false
+
+# Disable test pod
+test:
+  enabled: false
+
+# Service configuration (disabled for SingleBinary mode)
+read:
+  replicas: 0
+
+write:
+  replicas: 0
+
+backend:
+  replicas: 0

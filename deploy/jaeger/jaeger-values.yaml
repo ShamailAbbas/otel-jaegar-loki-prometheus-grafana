@@ -1,7 +1,23 @@
 collector:
-  replicas: 2
+  replicas: 1
   service:
     type: ClusterIP
+    otlp:
+      grpc:
+        enabled: true
+        name: otlp-grpc
+        port: 4317
+      http:
+        enabled: true
+        name: otlp-http
+        port: 4318
+
+  # Add OTLP receiver configuration
+  extraEnv:
+    - name: COLLECTOR_OTLP_ENABLED
+      value: "true"
+
 query:
   service:
     type: ClusterIP
+

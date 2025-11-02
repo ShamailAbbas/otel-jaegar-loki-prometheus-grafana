@@ -3,14 +3,15 @@ kind: ServiceMonitor
 metadata:
   name: otel-collector
   namespace: observability
+  labels:
+    release: prometheus  # must match your Prometheus release name
 spec:
   selector:
     matchLabels:
       app: otel-collector
-  template:
-    metadata:
-      labels:
-        release: kube-prometheus-stack
+  namespaceSelector:
+    matchNames:
+      - observability
   endpoints:
-    - port: prometheus-metrics
-      interval: 15s
+    - port: prom-exporter
+      interval: 30s

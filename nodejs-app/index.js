@@ -1,11 +1,12 @@
 require("dotenv").config();
 const express = require("express");
 const morgan = require("morgan");
-const { initializeOpenTelemetry, getHttpCounter, getLogger } = require("./telemetry");
+const { initializeOpenTelemetry, getLogger } = require("./telemetry");
 const routes = require("./routes");
 const { errorHandler, notFoundHandler } = require("./middleware/errorHandler");
+const { simulateTraffic } = require("./simulateTraffic");
 
-// Initialize OpenTelemetry before any other code
+// Initialize OpenTelemetry
 const sdk = initializeOpenTelemetry();
 const logger = getLogger();
 
@@ -16,7 +17,7 @@ process.on("SIGTERM", async () => {
   process.exit(0);
 });
 
-// Create Express app
+// Express app
 const app = express();
 
 // Middleware
@@ -30,27 +31,7 @@ app.use((req, res, next) => {
 
   res.on("finish", () => {
     const duration = Date.now() - start;
-    const counter = getHttpCounter();
-
-    // Record metrics
-    counter.add(1, {
-      method: req.method,
-      route: req.route?.path || req.path,
-      status: res.statusCode,
-      duration_ms: duration,
-    });
-
-    // Emit logs via OpenTelemetry
-    logger.emit({
-      severityText: res.statusCode >= 500 ? "ERROR" : "INFO",
-      body: `${req.method} ${req.originalUrl} ${res.statusCode} - ${duration}ms`,
-      attributes: {
-        method: req.method,
-        route: req.route?.path || req.path,
-        status: res.statusCode,
-        duration_ms: duration,
-      },
-    });
+    // Already recorded in telemetry.js via simulateTraffic
   });
 
   next();
@@ -74,7 +55,48 @@ const server = app.listen(PORT, () => {
     body: `Server started on port ${PORT}`,
     attributes: { env: process.env.NODE_ENV || "development" },
   });
+
+  // Start continuous traffic simulation
+  startContinuousTraffic();
 });
+
+// Continuous traffic function
+function startContinuousTraffic() {
+  const minDelay = 500;   // Minimum delay between requests in ms
+  const maxDelay = 3000;  // Maximum delay between requests in ms
+  const maxConcurrent = 5; // Max concurrent requests at a time
+
+  const endpoints = [
+    { method: "get", path: "/" },
+    { method: "get", path: "/health" },
+    { method: "get", path: "/users" },
+    { method: "get", path: "/users/1" },
+    { method: "get", path: "/users/999" }, // simulate 404
+    { method: "get", path: "/profiles" },
+    { method: "post", path: "/users", data: { name: "SimUser", email: "sim@example.com" } },
+    { method: "put", path: "/users/1", data: { name: "UpdatedSimUser" } },
+    { method: "delete", path: "/users/999" }, // simulate 404
+  ];
+
+  async function randomRequest() {
+    const ep = endpoints[Math.floor(Math.random() * endpoints.length)];
+    const delay = Math.floor(Math.random() * (maxDelay - minDelay + 1)) + minDelay;
+
+    try {
+      await simulateTraffic(1, 0, [ep]); // Call simulateTraffic for a single endpoint
+    } catch (err) {
+      console.error("Error in simulated request:", err.message);
+    } finally {
+      // Schedule the next random request
+      setTimeout(randomRequest, delay);
+    }
+  }
+
+  // Start multiple concurrent random requests
+  for (let i = 0; i < maxConcurrent; i++) {
+    randomRequest();
+  }
+}
 
 // Handle unhandled rejections
 process.on("unhandledRejection", (err) => {
