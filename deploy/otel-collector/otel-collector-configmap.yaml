@@ -29,11 +29,8 @@ data:
 
       otlphttp:
         endpoint: http://loki-gateway.observability.svc.cluster.local:80/otlp
-        # endpoint: http://loki-gateway.monitoring.svc.cluster.local:80/otlp
         headers:
           "X-Scope-OrgID": "my-org"
-      # loki:
-      #   endpoint: "http://loki.observability.svc.cluster.local:3100/loki/api/v1/push"
 
     service:
       pipelines:
@@ -46,3 +43,5 @@ data:
         logs:
           receivers: [otlp]
           exporters: [otlphttp]
+
+

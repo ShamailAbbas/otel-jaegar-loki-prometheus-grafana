@@ -25,7 +25,7 @@ spec:
           - name: METRICS_INTERVAL_MS
             value: "10000"
           - name: SERVICE_NAME
-            value: "nodejs-otel-app-2"
+            value: "nodejs-otel-app-v3"
           - name: SERVICE_VERSION
             value: "1.0.0"
           - name: PORT
